@@ -24,7 +24,7 @@ const buildLib = {
   lib: {
     entry: path.resolve(__dirname, 'packages/yugioh-card'),
     name: 'YugiohCard',
-    fileName: format => {
+    fileName: (format) => {
       if (format === 'es') {
         return `${format}/index.mjs`;
       }
@@ -52,14 +52,12 @@ const buildWebsite = {
 
 export default defineConfig({
   base: './',
-  plugins: [
-    vue(),
-  ],
+  plugins: [vue()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'], // 扩展了.vue后缀
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'], // extended vue suffixes
   },
   build: process.argv.includes('lib') ? buildLib : buildWebsite,
 });

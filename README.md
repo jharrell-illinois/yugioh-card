@@ -1,5 +1,6 @@
-<h1 align="center">🎉 Yugioh Card - Translation & TCG Optimization Project 🎉</h1>
+<h1 align="center">Yugioh Card - Translation & TCG Optimization Project</h1>
 <p align="center">
+  original package links:
   <a href="https://www.npmjs.org/package/yugioh-card">
     <img src="https://img.shields.io/npm/v/yugioh-card.svg">
   </a>
