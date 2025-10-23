@@ -40,10 +40,50 @@ export class YugiohCard extends Card {
   // size for exact match to real cards
   cardWidth = 1394;
   cardHeight = 2033;
-
+  /** default CN data
   data = {
     language: 'sc',
     font: '',
+    name: '',
+    color: '',
+    align: 'left',
+    gradient: false,
+    gradientColor1: '#999999',
+    gradientColor2: '#ffffff',
+    type: 'monster',
+    attribute: 'dark',
+    icon: '',
+    image: '',
+    cardType: 'normal',
+    pendulumType: 'normal-pendulum',
+    level: 0,
+    rank: 0,
+    pendulumScale: 0,
+    pendulumDescription: '',
+    monsterType: '',
+    atkBar: true,
+    atk: 0,
+    def: 0,
+    arrowList: [],
+    description: '',
+    firstLineCompress: false,
+    descriptionAlign: false,
+    descriptionZoom: 1,
+    descriptionWeight: 0,
+    package: '',
+    password: '',
+    copyright: '',
+    laser: '',
+    rare: '',
+    twentieth: false,
+    radius: true,
+    scale: 1,
+  };
+  */
+  // default data for en
+  data = {
+    language: 'en',
+    font: 'ygo-en',
     name: '',
     color: '',
     align: 'left',
@@ -851,7 +891,7 @@ export class YugiohCard extends Card {
 
   get autoNameColor() {
     let color = 'black';
-    // 自动颜色
+    // automatically switch colors
     if (
       (this.data.type === 'monster' &&
         ['xyz', 'link'].includes(this.data.cardType)) ||
@@ -894,6 +934,7 @@ export class YugiohCard extends Card {
 
   get spellTrapName() {
     let name = '';
+    // this part only relates to non english languages
     if (this.data.language === 'sc') {
       if (this.data.type === 'spell') {
         name = '魔法卡';
