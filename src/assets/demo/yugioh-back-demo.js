@@ -1,6 +1,6 @@
 export default {
   type: 'normal',
-  logo: 'ocg',
+  logo: 'tcg',
   konami: true,
   register: true,
   radius: true,
