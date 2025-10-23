@@ -37,5 +37,5 @@ export default {
   rare: '',
   twentieth: false,
   radius: false,
-  scale: 1,
+  scale: 0.45,
 };

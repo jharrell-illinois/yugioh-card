@@ -6,23 +6,61 @@ import { splitBreakWord } from './split-break-word.js';
 export class CompressText extends Group {
   constructor(data = {}) {
     super();
-    this.baseLineHeight = 1.15; // 基础行高
-    this.noCompressText = '●①②③④⑤⑥⑦⑧⑨⑩'; // 不压缩的文本
-    this.parseList = []; // 解析后的文本列表
-    this.newlineList = []; // 根据换行符分割的文本列表
-    this.currentX = 0; // 当前行的x坐标
-    this.currentY = 0; // 当前行的y坐标
-    this.currentLine = 0; // 当前行数
-    this.textScale = 1; // 文本缩放比例
-    this.firstLineTextScale = 1; // 首行文本缩放比例
-    this.isSmallSize = false; // 是否是小文字
-    this.group = null; // Leafer文本组
-    this.needCompressTwice = false; // 是否需要二次压缩
-    this.bounds = {}; // 宽高信息
+    this.baseLineHeight = 1.15;
+    this.noCompressText = '●①②③④⑤⑥⑦⑧⑨⑩'; // prevent compression on special symbols
+    this.parseList = [];
+    this.newlineList = [];
+    this.currentX = 0; // current row X coord
+    this.currentY = 0; // current row Y coord
+    this.currentLine = 0; // current row index
+    this.textScale = 1;
+    this.firstLineTextScale = 1; // for first line compression
+    this.isSmallSize = false;
+    this.group = null; // Leafer Text Group
+    this.needCompressTwice = false; // secondary compression
+    this.bounds = {}; // text box height & width
 
+    /* default data for chinese
     this.defaultData = {
       text: '',
       fontFamily: 'ygo-sc, 楷体, serif',
+      fontSize: 24,
+      fontWeight: 'normal',
+      lineHeight: this.baseLineHeight,
+      letterSpacing: 0,
+      wordSpacing: 0,
+      firstLineCompress: false,
+      textAlign: 'justify',
+      textJustifyLast: false,
+      color: 'black',
+      strokeWidth: 0,
+      gradient: false,
+      gradientColor1: '#999999',
+      gradientColor2: '#ffffff',
+      rtFontFamily: 'ygo-tip, sans-serif',
+      rtFontSize: 13,
+      rtFontWeight: 'bold',
+      rtLineHeight: this.baseLineHeight,
+      rtLetterSpacing: 0,
+      rtTop: -9,
+      rtColor: 'black',
+      rtStrokeWidth: 0,
+      rtFontScaleX: 1,
+      fontScale: 1,
+      autoSmallSize: false,
+      smallFontSize: 18,
+      width: 0,
+      height: 0,
+      x: 0,
+      y: 0,
+      zIndex: 0,
+    };
+    */
+
+    // default data for Eng
+    this.defaultData = {
+      text: '',
+      fontFamily: 'ygo-en, serif',
       fontSize: 24,
       fontWeight: 'normal',
       lineHeight: this.baseLineHeight,
@@ -69,7 +107,7 @@ export class CompressText extends Group {
   set(data = {}) {
     data = cloneDeep(data);
     let needCompressText = false;
-    Object.keys(data).forEach(key => {
+    Object.keys(data).forEach((key) => {
       const value = data[key] ?? this.defaultData[key];
       if (!isEqual(this[key], value)) {
         this[key] = value;
@@ -85,43 +123,50 @@ export class CompressText extends Group {
     this.set(Object.assign(this.defaultData, data));
   }
 
-  // 获取解析后的文本列表
+  // get parsed text list
   getParseList() {
     let bold = false;
-    // 正则的捕获圆括号不要随意修改
-    return String(this.text).trimEnd().split(new RegExp(`(\\[.*?\\(.*?\\)]|<b>|</b>|\n|[${this.noCompressText}])`)).filter(value => value).map(value => {
-      let rubyText = value;
-      let rtText = '';
-      if (/\[.*?\(.*?\)]/g.test(value)) {
-        rubyText = value.replace(/\[(.*?)\((.*?)\)]/g, '$1');
-        rtText = value.replace(/\[(.*?)\((.*?)\)]/g, '$2');
-      }
-      if (value === '<b>') {
-        bold = true;
-        return null;
-      }
-      if (value === '</b>') {
-        bold = false;
-        return null;
-      }
-      return {
-        ruby: {
-          text: rubyText,
-          bold,
-          charList: splitBreakWord(rubyText).map(char => ({ text: char })),
-        },
-        rt: {
-          text: rtText,
-        },
-      };
-    }).filter(value => value);
+    // do not modify regex capture groups
+    return String(this.text)
+      .trimEnd()
+      .split(
+        new RegExp(`(\\[.*?\\(.*?\\)]|<b>|</b>|\n|[${this.noCompressText}])`)
+      )
+      .filter((value) => value)
+      .map((value) => {
+        let rubyText = value;
+        let rtText = '';
+        if (/\[.*?\(.*?\)]/g.test(value)) {
+          rubyText = value.replace(/\[(.*?)\((.*?)\)]/g, '$1');
+          rtText = value.replace(/\[(.*?)\((.*?)\)]/g, '$2');
+        }
+        if (value === '<b>') {
+          bold = true;
+          return null;
+        }
+        if (value === '</b>') {
+          bold = false;
+          return null;
+        }
+        return {
+          ruby: {
+            text: rubyText,
+            bold,
+            charList: splitBreakWord(rubyText).map((char) => ({ text: char })),
+          },
+          rt: {
+            text: rtText,
+          },
+        };
+      })
+      .filter((value) => value);
   }
 
-  // 获取换行列表
+  // get list of line breaks
   getNewlineList() {
     const list = [[]];
     let currentIndex = 0;
-    this.parseList.forEach(item => {
+    this.parseList.forEach((item) => {
       const ruby = item.ruby;
       list[currentIndex].push(item);
       if (ruby.text === '\n') {
@@ -132,7 +177,7 @@ export class CompressText extends Group {
     return list;
   }
 
-  // 获取压缩文本
+  // get compressed text
   compressText() {
     this.textScale = 1;
     this.firstLineTextScale = 1;
@@ -153,12 +198,12 @@ export class CompressText extends Group {
     this.add(this.group);
   }
 
-  // 创建文本
+  // create text (t/n: they call this a ruby for some reason?)
   createRuby() {
-    this.parseList.forEach(item => {
+    this.parseList.forEach((item) => {
       const ruby = item.ruby;
       const charList = ruby.charList;
-      charList.forEach(char => {
+      charList.forEach((char) => {
         const charLeaf = new Text({
           text: char.text,
           fontFamily: this.fontFamily,
@@ -187,26 +232,35 @@ export class CompressText extends Group {
     this.updateTextScale();
   }
 
-  // 压缩文本
+  // compressed text
   compressRuby() {
     if (this.firstLineCompress && this.width) {
-      // 首行压缩
-      const firstNewlineCharList = this.newlineList[0].map(item => item.ruby.charList).flat();
+      // first row compression
+      const firstNewlineCharList = this.newlineList[0]
+        .map((item) => item.ruby.charList)
+        .flat();
       let firstNewlineTotalWidth = 0;
       let maxWidth = this.width;
-      firstNewlineCharList.forEach(char => {
+      firstNewlineCharList.forEach((char) => {
         const paddingLeft = char.paddingLeft || 0;
         const paddingRight = char.paddingRight || 0;
         firstNewlineTotalWidth += char.originalWidth;
         maxWidth -= paddingLeft + paddingRight;
       });
-      this.firstLineTextScale = Math.min(Math.floor(maxWidth / firstNewlineTotalWidth * 1000) / 1000, 1);
+      this.firstLineTextScale = Math.min(
+        Math.floor((maxWidth / firstNewlineTotalWidth) * 1000) / 1000,
+        1
+      );
       this.updateTextScale();
     }
-    const charList = this.parseList.map(item => item.ruby.charList).flat();
+    const charList = this.parseList.map((item) => item.ruby.charList).flat();
     const lastChar = charList[charList.length - 1];
-    if (this.height && lastChar && this.currentY + lastChar.height > this.height) {
-      // 用二分法获取最大的scale，精度0.01
+    if (
+      this.height &&
+      lastChar &&
+      this.currentY + lastChar.height > this.height
+    ) {
+      // use binary search to get maximum scale with 0.01 accuracy
       let scale = 0.5;
       let start = 0;
       let end = this.textScale;
@@ -214,10 +268,20 @@ export class CompressText extends Group {
         scale = (start + end) / 2;
         this.textScale = scale;
         this.updateTextScale();
-        this.currentY + lastChar.height > this.height ? end = scale : start = scale;
-        if (this.currentY + lastChar.height <= this.height && end - start <= 0.01) {
-          // 如果是autoSmallSize，字体判断缩小，当字号大于1不执行
-          if (this.autoSmallSize && scale < 0.7 && this.fontScale <= 1 && !this.isSmallSize) {
+        this.currentY + lastChar.height > this.height
+          ? (end = scale)
+          : (start = scale);
+        if (
+          this.currentY + lastChar.height <= this.height &&
+          end - start <= 0.01
+        ) {
+          // if autoSmallSize, reduce font size, will not execute if font size > 1
+          if (
+            this.autoSmallSize &&
+            scale < 0.7 &&
+            this.fontScale <= 1 &&
+            !this.isSmallSize
+          ) {
             this.isSmallSize = true;
             this.updateFontSize();
             scale = 0.5;
@@ -231,27 +295,33 @@ export class CompressText extends Group {
     }
   }
 
-  // 对齐ruby
+  // align ruby
   alignRuby() {
-    const charList = this.parseList.map(item => item.ruby.charList).flat();
-    const alignLine = this.textScale < 1 || ['center', 'right'].includes(this.textAlign) || this.textJustifyLast ? this.currentLine + 1 : this.currentLine;
+    const charList = this.parseList.map((item) => item.ruby.charList).flat();
+    const alignLine =
+      this.textScale < 1 ||
+      ['center', 'right'].includes(this.textAlign) ||
+      this.textJustifyLast
+        ? this.currentLine + 1
+        : this.currentLine;
     for (let line = 0; line < alignLine; line++) {
-      const lineList = charList.filter(item => item.line === line);
+      const lineList = charList.filter((item) => item.line === line);
       if (lineList.length) {
         const lastChar = lineList[lineList.length - 1];
         const lastCharLeaf = lastChar.charLeaf;
         const lastPaddingRight = lastChar.paddingRight || 0;
-        const remainWidth = this.width - lastCharLeaf.x - lastChar.width - lastPaddingRight;
+        const remainWidth =
+          this.width - lastCharLeaf.x - lastChar.width - lastPaddingRight;
         if (remainWidth > 0) {
           if (this.textAlign === 'center') {
             const offset = remainWidth / 2;
-            lineList.forEach(char => {
+            lineList.forEach((char) => {
               const charLeaf = char.charLeaf;
               charLeaf.x += offset;
             });
           } else if (this.textAlign === 'right') {
             const offset = remainWidth;
-            lineList.forEach(char => {
+            lineList.forEach((char) => {
               const charLeaf = char.charLeaf;
               charLeaf.x += offset;
             });
@@ -269,9 +339,9 @@ export class CompressText extends Group {
     }
   }
 
-  // 创建注音
+  // create phoenetic symbols? (t/n translation is weird)
   createRt() {
-    this.parseList.forEach(item => {
+    this.parseList.forEach((item) => {
       const rt = item.rt;
       if (rt.text) {
         const rtLeaf = new Text({
@@ -296,18 +366,18 @@ export class CompressText extends Group {
         this.group.add(rtLeaf);
       }
     });
-    // 如果需要再次压缩
+    // compress again
     if (this.needCompressTwice) {
       this.updateTextScale();
       this.compressRuby();
       this.alignRuby();
-      this.parseList.forEach(item => {
+      this.parseList.forEach((item) => {
         this.positionRt(item);
       });
     }
   }
 
-  // 更新文本压缩
+  // update text compression
   updateTextScale() {
     this.currentX = 0;
     this.currentY = 0;
@@ -318,20 +388,20 @@ export class CompressText extends Group {
 
     this.newlineList.forEach((newline, newlineIndex) => {
       const lastNewline = newlineIndex === this.newlineList.length - 1;
-      newline.forEach(item => {
+      newline.forEach((item) => {
         const ruby = item.ruby;
         const rt = item.rt;
         const charList = ruby.charList;
-        charList.forEach(char => {
+        charList.forEach((char) => {
           const charLeaf = char.charLeaf;
           const paddingLeft = char.paddingLeft || 0;
           const paddingRight = char.paddingRight || 0;
           if (this.firstLineCompress && newlineIndex === 0) {
-            // 首行压缩到一行
+            // compress first line to one line of total space
             charLeaf.scaleX = this.firstLineTextScale;
             char.width = char.originalWidth * this.firstLineTextScale;
           } else if (!this.noCompressText.includes(char.text) && lastNewline) {
-            // 只压缩最后一行
+            // compress only last line
             charLeaf.scaleX = this.textScale;
             char.width = char.originalWidth * this.textScale;
           }
@@ -340,7 +410,12 @@ export class CompressText extends Group {
             noBreakTotalWidth += char.width + paddingLeft + paddingRight;
           } else {
             const totalWidth = char.width + paddingLeft + paddingRight;
-            if (this.width && char.text !== '\n' && this.currentX && this.currentX + totalWidth > this.width) {
+            if (
+              this.width &&
+              char.text !== '\n' &&
+              this.currentX &&
+              this.currentX + totalWidth > this.width
+            ) {
               this.addRow();
             }
             this.positionChar(char);
@@ -354,7 +429,7 @@ export class CompressText extends Group {
           if (this.width && this.currentX + noBreakTotalWidth > this.width) {
             this.addRow();
           }
-          noBreakCharList.forEach(char => {
+          noBreakCharList.forEach((char) => {
             this.positionChar(char);
           });
 
@@ -365,13 +440,13 @@ export class CompressText extends Group {
     });
   }
 
-  // 更新文本大小
+  // update text size
   updateFontSize() {
     this.textScale = 1;
     const fontSize = this.isSmallSize ? this.smallFontSize : this.fontSize;
     const sizePercent = fontSize / this.fontSize;
-    const charList = this.parseList.map(item => item.ruby.charList).flat();
-    charList.forEach(char => {
+    const charList = this.parseList.map((item) => item.ruby.charList).flat();
+    charList.forEach((char) => {
       const charLeaf = char.charLeaf;
       charLeaf.fontSize = fontSize * this.fontScale;
       charLeaf.lineHeight = fontSize * this.lineHeight * this.fontScale;
@@ -383,7 +458,7 @@ export class CompressText extends Group {
     this.updateTextScale();
   }
 
-  // 定位Char
+  // positioning character
   positionChar(char) {
     const paddingLeft = char.paddingLeft || 0;
     const paddingRight = char.paddingRight || 0;
@@ -394,7 +469,7 @@ export class CompressText extends Group {
     char.line = this.currentLine;
   }
 
-  // 添加行
+  // add a row
   addRow() {
     this.removeLineLastSpace(this.currentLine);
     const fontSize = this.isSmallSize ? this.smallFontSize : this.fontSize;
@@ -403,10 +478,10 @@ export class CompressText extends Group {
     this.currentLine++;
   }
 
-  // 删除行尾空格
+  // remove trailing whitespace
   removeLineLastSpace(line) {
-    const charList = this.parseList.map(item => item.ruby.charList).flat();
-    const lineList = charList.filter(item => item.line === line);
+    const charList = this.parseList.map((item) => item.ruby.charList).flat();
+    const lineList = charList.filter((item) => item.line === line);
     if (lineList.length) {
       const lastChar = lineList[lineList.length - 1];
       if (lastChar.text === ' ') {
@@ -421,7 +496,7 @@ export class CompressText extends Group {
     }
   }
 
-  // 定位rt
+  // positioning phoenetic char?
   positionRt(item) {
     const ruby = item.ruby;
     const rt = item.rt;
@@ -433,26 +508,32 @@ export class CompressText extends Group {
       const lastCharLeaf = lastChar.charLeaf;
       const firstPaddingLeft = firstChar.paddingLeft || 0;
       const lastPaddingRight = lastChar.paddingRight || 0;
-      const rubyWidth = lastCharLeaf.x - firstCharLeaf.x + lastChar.width + firstPaddingLeft + lastPaddingRight;
+      const rubyWidth =
+        lastCharLeaf.x -
+        firstCharLeaf.x +
+        lastChar.width +
+        firstPaddingLeft +
+        lastPaddingRight;
 
       rtLeaf.around = { type: 'percent', x: 0.5, y: 0 };
       rtLeaf.x = firstCharLeaf.x + rubyWidth / 2 - firstPaddingLeft;
       rtLeaf.y = firstCharLeaf.y + this.rtTop * this.fontScale;
 
       if (this.rtFontScaleX !== 1) {
-        // 特殊情况不做压缩，只居中对齐
+        // in special cases, no compression is performed, only center alignment
         rtLeaf.scaleX = this.rtFontScaleX;
       } else if (rt.width / rubyWidth < 0.95 && ruby.text.length > 1) {
-        // 拉伸两端对齐
+        // stretch justify
         const maxLetterSpacing = this.rtFontSize * this.fontScale * 3;
-        const newLetterSpacing = (rubyWidth * 0.95 - rt.width) / (rt.text.length - 1);
+        const newLetterSpacing =
+          (rubyWidth * 0.95 - rt.width) / (rt.text.length - 1);
         rtLeaf.letterSpacing = Math.min(newLetterSpacing, maxLetterSpacing);
         rtLeaf.x += rtLeaf.letterSpacing / 2;
       } else if (rt.width > rubyWidth) {
-        // 压缩
+        // compression
         if (rubyWidth / rt.width < 0.6) {
-          // 防止过度压缩，加宽ruby
-          // 公式：(rubyWidth + widen) / rtWidth = 0.6
+          // to prevent over-compression, widen the ruby
+          // formula: (rubyWidth + widen) / rtWidth = 0.6
           const widen = 0.6 * rt.width - rubyWidth;
           rtLeaf.scaleX = 0.6;
           firstChar.paddingLeft = widen / 2;
@@ -465,14 +546,14 @@ export class CompressText extends Group {
     }
   }
 
-  // 创建渐变
+  // creating color gradient
   createGradient() {
     if (this.gradient) {
       const fontSize = this.isSmallSize ? this.smallFontSize : this.fontSize;
-      this.parseList.forEach(item => {
+      this.parseList.forEach((item) => {
         const ruby = item.ruby;
         const charList = ruby.charList;
-        charList.forEach(char => {
+        charList.forEach((char) => {
           const charLeaf = char.charLeaf;
           charLeaf.set({
             fill: {
@@ -500,21 +581,27 @@ export class CompressText extends Group {
     }
   }
 
-  // 创建元素信息
+  // create element bounds
   createBounds() {
     this.bounds = {
       width: 0,
       height: 0,
     };
-    const charList = this.parseList.map(item => item.ruby.charList).flat();
+    const charList = this.parseList.map((item) => item.ruby.charList).flat();
     for (let line = 0; line < this.currentLine + 1; line++) {
-      const lineList = charList.filter(item => item.line === line);
+      const lineList = charList.filter((item) => item.line === line);
       if (lineList.length) {
         const lastChar = lineList[lineList.length - 1];
         const lastCharLeaf = lastChar.charLeaf;
         const lastPaddingRight = lastChar.paddingRight || 0;
-        this.bounds.width = Math.max(this.bounds.width, lastCharLeaf.x + lastChar.width + lastPaddingRight) * this.scaleX;
-        this.bounds.height = Math.max(this.bounds.height, lastCharLeaf.y + lastChar.height) * this.scaleY;
+        this.bounds.width =
+          Math.max(
+            this.bounds.width,
+            lastCharLeaf.x + lastChar.width + lastPaddingRight
+          ) * this.scaleX;
+        this.bounds.height =
+          Math.max(this.bounds.height, lastCharLeaf.y + lastChar.height) *
+          this.scaleY;
       }
     }
   }
