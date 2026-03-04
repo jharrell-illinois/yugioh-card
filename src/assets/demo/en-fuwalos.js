@@ -25,10 +25,14 @@ export default {
   def: 600,
   arrowList: [],
   description: `If you control no cards (Quick Effect): You can discard this card; apply these effects this turn.
-● Each time your opponent Special Summons a monster(s) from the Deck and/or Extra Deck, immediately draw 1 card.
-● Once, during this End Phase, if the number of cards in your hand is more than the number of cards your opponent controls +6, you must randomly shuffle cards from your hand into the Deck so the number in your hand equals the number your opponent controls +6.
+● Each time your opponent Special Summons a monster(s) from the Deck and/or Extra
+Deck, immediately draw 1 card.
+● Once, during this End Phase, if the number of cards in your hand is more than the number
+of cards your opponent controls +6, you must randomly shuffle cards from your hand into
+the Deck so the number in your hand equals the number your opponent controls +6.
 You can only activate 1 other "Mulcharmy" monster effect, the turn you activate this effect.`,
   firstLineCompress: false,
+  compressAllLines: true,
   descriptionAlign: false,
   descriptionZoom: 1,
   descriptionWeight: 0,
@@ -39,5 +43,5 @@ You can only activate 1 other "Mulcharmy" monster effect, the turn you activate 
   rare: '',
   twentieth: false,
   radius: true,
-  scale: 1,
+  scale: 0.4,
 };
