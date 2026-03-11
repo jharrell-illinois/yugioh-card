@@ -1,5 +1,11 @@
 import { Text, Image, ImageEvent, Leafer, useCanvas } from 'leafer-unified';
-import { isBrowser, isNode, loadFontBrowser, loadFontNode } from '../utils/index.js';
+import {
+  isBrowser,
+  isNode,
+  loadFontBrowser,
+  loadFontNode,
+  loadFontTTFs,
+} from '../utils/index.js';
 
 const fontPathMap = {
   YugiohCard: '/yugioh/font',
@@ -42,9 +48,16 @@ export class Card {
       if (isNode) {
         loadFontNode(`${this.resourcePath}${fontPath}`, this.skia); // 同步
       } else {
-        loadFontBrowser(`${this.resourcePath}${fontPath}`).then(() => { // 异步，加载完再绘制一次
-          this.draw();
-        });
+        //load base fonts
+        loadFontBrowser(`${this.resourcePath}${fontPath}`)
+          .then(loadFontTTFs(`${this.resourcePath}${fontPath}/ttfs`))
+          .catch(() => {
+            console.error('error loading some fonts');
+          })
+          .finally(() => {
+            console.log('finished loading fonts');
+            this.draw();
+          });
       }
     }
   }
@@ -112,8 +125,8 @@ export class Card {
   updateScale() {
     const pixelRatio = isBrowser ? devicePixelRatio : 1;
     this.leafer.pixelRatio = pixelRatio;
-    this.leafer.width = this.cardWidth * this.data.scale / pixelRatio;
-    this.leafer.height = this.cardHeight * this.data.scale / pixelRatio;
+    this.leafer.width = (this.cardWidth * this.data.scale) / pixelRatio;
+    this.leafer.height = (this.cardHeight * this.data.scale) / pixelRatio;
     this.leafer.scaleX = this.data.scale / pixelRatio;
     this.leafer.scaleY = this.data.scale / pixelRatio;
   }

@@ -29,6 +29,7 @@ export class YugiohCard extends Card {
   atkDefLinkLeaf = null;
   passwordLeaf = null;
   copyrightLeaf = null;
+  editionLeafs = null;
   laserLeaf = null;
   rareLeaf = null;
   attributeRareLeaf = null;
@@ -80,7 +81,11 @@ export class YugiohCard extends Card {
     super(data);
 
     this.initLeafer();
-    this.setData(data.data);
+    document.title = 'loading...';
+    setTimeout(() => {
+      this.setData(data.data);
+      document.title = 'Yugioh Card';
+    }, 1000);
   }
 
   get tag() {
@@ -105,6 +110,7 @@ export class YugiohCard extends Card {
     this.drawAtkDefLink();
     this.drawPassword();
     this.drawCopyright();
+    this.drawEdition();
     this.drawLaser();
     this.drawRare();
     this.drawAttributeRare();
@@ -119,7 +125,7 @@ export class YugiohCard extends Card {
     }
     this.cardLeaf.set({
       url: this.cardUrl,
-      cornerRadius: this.data.radius ? 24 : 0,
+      //cornerRadius: this.data.radius ? 24 : 0,
       zIndex: 0,
     });
   }
@@ -560,6 +566,7 @@ export class YugiohCard extends Card {
       fontFamily,
       fontSize: description.fontSize,
       fontScale: this.data.descriptionZoom,
+      fontWeight: 100,
       textAlign: this.data.descriptionAlign ? 'center' : 'justify',
       firstLineCompress: this.data.firstLineCompress,
       compressAllLines: this.data.compressAllLines,
@@ -682,6 +689,57 @@ export class YugiohCard extends Card {
     });
   }
 
+  drawEdition() {
+    if (!this.editionLeafs) {
+      this.editionLeafs = new Group();
+      Array(3)
+        .fill()
+        .map(() => new CompressText())
+        .forEach((leaf) => {
+          this.editionLeafs.add(leaf);
+        });
+      this.leafer.add(this.editionLeafs);
+    }
+
+    const { edition } = this.style;
+    const commonParams = {
+      fontFamily: edition.fontFamily,
+      fontSize: edition.fontSize,
+      fontWeight: edition.fontWeight,
+      letterSpacing: -1,
+      color:
+        this.data.type === 'monster' && this.data.cardType === 'xyz'
+          ? 'white'
+          : 'black',
+      zIndex: 30,
+      y: edition.top,
+    };
+
+    const [leaf1, leafSt, leafEd] = this.editionLeafs.children;
+    if (this.data.edition === '1st') {
+      leaf1.set({
+        ...commonParams,
+        text: '1',
+        x: edition.left,
+      });
+      let bounds = leaf1.width;
+      leafSt.set({
+        ...commonParams,
+        text: 'st',
+        x: edition.left + bounds,
+        y: edition.top - leaf1.height,
+        fontSize: edition.smallFontSize,
+        around: { type: 'percent', x: 0.2, y: -1.4 },
+      });
+      bounds += leafSt.width;
+      leafEd.set({
+        ...commonParams,
+        text: ' Edition',
+        x: edition.left + bounds,
+      });
+    }
+  }
+
   drawPassword() {
     if (!this.passwordLeaf) {
       this.passwordLeaf = new CompressText();
@@ -690,13 +748,16 @@ export class YugiohCard extends Card {
 
     this.passwordLeaf.set({
       text: this.data.password,
-      fontFamily: 'ygo-password',
+      fontFamily: 'stoneserifregular',
+      fontWeight: 500,
       fontSize: 40,
+      letterSpacing: 1,
       color:
         this.data.type === 'monster' && this.data.cardType === 'xyz'
           ? 'white'
           : 'black',
-      x: 66,
+      //x: 66,
+      x: 63,
       y: 1932,
       zIndex: 30,
     });
