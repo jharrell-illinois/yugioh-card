@@ -66,7 +66,7 @@ export class CompressText extends Group {
       document.fonts.ready.then(() => {
         setTimeout(() => {
           this.compressText();
-        }, 250);
+        }, 300);
       });
     }
   }
