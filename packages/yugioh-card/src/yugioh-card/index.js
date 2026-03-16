@@ -765,7 +765,12 @@ export class YugiohCard extends Card {
 
   drawCopyright() {
     if (!this.copyrightLeaf) {
-      this.copyrightLeaf = new Image();
+      //refactor into a group because we don't have a good image
+      //for 2020 copyright
+      this.copyrightLeaf = new Group();
+      const copyrightImg = new Image();
+      const copyrightText = new Text();
+      this.copyrightLeaf.add([copyrightImg, copyrightText]);
       this.leafer.add(this.copyrightLeaf);
     }
 
@@ -773,15 +778,36 @@ export class YugiohCard extends Card {
       this.data.type === 'monster' && this.data.cardType === 'xyz'
         ? 'white'
         : 'black';
-    const copyrightUrl = this.data.copyright
-      ? `${this.baseImage}/copyright-${this.data.copyright}-${color}.svg`
-      : '';
+    const [copyrightImg, copyrightText] = this.copyrightLeaf.children;
+    if (this.data.copyright !== 'en2') {
+      //handle old copyright the same as before
+      const copyrightUrl = this.data.copyright
+        ? `${this.baseImage}/copyright-${this.data.copyright}-${color}.svg`
+        : '';
+      copyrightImg.set({
+        url: copyrightUrl,
+        x: this.cardWidth - 141,
+        y: 1936,
+        //around: { type: 'percent', x: 1, y: 0 },
+        visible: this.showCopyright,
+        zIndex: 30,
+      });
+    } else if (this.data.copyright === 'en2') {
+      //special case for en2
+      copyrightText.set({
+        text: '©2020 Studio Dice/SHUEISHA, TV TOKYO, KONAMI',
+        fontFamily: 'ygoitcstoneserifltitalic',
+        fontSize: 30,
+        x: this.cardWidth - 141,
+        y: 1936,
+        around: { type: 'percent', x: 1, y: 0 },
+        visible: this.showCopyright,
+        zIndex: 30,
+      });
+    }
+    console.log('img:', copyrightImg, 'text:', copyrightText);
     this.copyrightLeaf.set({
-      url: copyrightUrl,
-      x: this.cardWidth - 141,
-      y: 1936,
-      around: { type: 'percent', x: 1, y: 0 },
-      visible: this.data.copyright,
+      visible: this.showCopyright,
       zIndex: 30,
     });
   }
@@ -910,6 +936,10 @@ export class YugiohCard extends Card {
       color = 'white';
     }
     return color;
+  }
+
+  get showCopyright() {
+    return !!this.data.copyright;
   }
 
   get showAttribute() {
