@@ -25,15 +25,17 @@ export default inheritProp({
     lineHeight: 1.02,
   },
   effect: {
-    fontFamily: 'ygo-en-race',
+    fontFamily: 'ygoitcstoneserifboldsmallcaps',
     top: 1527,
-    fontSize: 56,
+    fontSize: 52,
     letterSpacing: 1,
     lineHeight: 1.02,
+    wordSpacing: -13.5,
   },
   description: {
     fontSize: 42,
-    lineHeight: 1.02,
+    lineHeight: 1.1,
+    fontFamily: 'ygomatrixbook',
   },
   edition: {
     fontFamily: 'palatinolinotypebold',
@@ -41,7 +43,7 @@ export default inheritProp({
     smallFontSize: 32,
     fontWeight: 'bold',
     top: 1930,
-    left: 265,
+    left: 270,
   },
   copyright: {
     fontFamily: 'stoneserifregular',

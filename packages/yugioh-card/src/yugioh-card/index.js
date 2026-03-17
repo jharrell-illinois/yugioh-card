@@ -427,7 +427,7 @@ export class YugiohCard extends Card {
 
     this.packageLeaf.set({
       text: this.data.package,
-      fontFamily: 'ygo-password',
+      fontFamily: 'palatinolinotype',
       fontSize: 40,
       color:
         this.data.type === 'monster' && this.data.cardType === 'xyz'
@@ -508,7 +508,7 @@ export class YugiohCard extends Card {
     const rightBracket = ['en', 'kr'].includes(this.data.language) ? ']' : '】';
 
     this.effectLeaf.set({
-      text: leftBracket + this.data.monsterType + rightBracket,
+      text: `${leftBracket} ${this.data.monsterType} ${rightBracket}`,
       fontFamily: effect.fontFamily,
       fontSize: effect.fontSize,
       strokeWidth: this.data.descriptionWeight,
@@ -525,6 +525,13 @@ export class YugiohCard extends Card {
       visible: this.showEffect,
       zIndex: 30,
     });
+    this.effectLeaf.children[0].children.forEach((leaf) => {
+      if (!['[', ']'].includes(leaf.text)) {
+        leaf.scaleY = 1.05;
+        leaf.y += 4;
+      }
+    });
+    console.log(this.effectLeaf.children);
   }
 
   drawDescription() {
@@ -552,7 +559,7 @@ export class YugiohCard extends Card {
     }
 
     //let height = 385;
-    let height = 380;
+    let height = 375;
     if (!['spell', 'trap'].includes(this.data.type)) {
       if (this.showEffect) {
         height -= effectHeight;
@@ -722,14 +729,16 @@ export class YugiohCard extends Card {
         text: '1',
         x: edition.left,
       });
+      leaf1.scaleX *= 0.8;
       let bounds = leaf1.width;
       leafSt.set({
         ...commonParams,
+        fontFamily: 'palatinolinotype',
         text: 'st',
         x: edition.left + bounds,
-        y: edition.top - leaf1.height,
+        y: edition.top,
         fontSize: edition.smallFontSize,
-        around: { type: 'percent', x: 0.2, y: -1.4 },
+        around: { type: 'percent', x: 0.2, y: 0.03 },
       });
       bounds += leafSt.width;
       leafEd.set({

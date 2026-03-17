@@ -3,7 +3,7 @@
     <div class="yugioh-card">
       <div ref="card" class="card" />
     </div>
-    <!--div class="form">
+    <div class="form">
       <div class="form-header">
         <div class="form-title">
           <span>Yugioh Card</span>
@@ -47,7 +47,7 @@
           >
         </div>
       </div>
-    </div-->
+    </div>
   </div>
 </template>
 

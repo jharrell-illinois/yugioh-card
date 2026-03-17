@@ -32,6 +32,7 @@ export class CompressText extends Group {
       lineHeight: this.baseLineHeight,
       letterSpacing: 0,
       wordSpacing: 0,
+      modScaleY: 0,
       firstLineCompress: false,
       compressAllLines: false,
       autoSmallSize: false,
