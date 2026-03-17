@@ -38,11 +38,11 @@ You can only activate 1 other "Mulcharmy" monster effect, the turn you activate 
   descriptionWeight: 0,
   package: 'L5DD-ENC16',
   password: '42141493',
-  copyright: '',
+  copyright: 'en2',
   edition: '1st',
   laser: '',
   rare: '',
   twentieth: false,
   radius: true,
-  scale: 1,
+  scale: 0.4,
 };

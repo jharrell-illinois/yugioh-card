@@ -7,7 +7,7 @@ export class CompressText extends Group {
   constructor(data = {}) {
     super();
     this.baseLineHeight = 1.15; // 基础行高
-    this.noCompressText = ' ●①②③④⑤⑥⑦⑧⑨⑩'; // 不压缩的文本
+    this.noCompressText = ' ●①②③④⑤⑥⑦⑧⑨⑩©'; // 不压缩的文本
     this.parseList = []; // 解析后的文本列表
     this.newlineList = []; // 根据换行符分割的文本列表
     this.currentX = 0; // 当前行的x坐标
@@ -477,11 +477,19 @@ export class CompressText extends Group {
               rubyLeaf.scaleX = lineScale;
               ruby.width = ruby.originalWidth * lineScale;
             }
-          } else if (this.firstLineCompress && newlineIndex === 0) {
+          } else if (
+            this.firstLineCompress &&
+            newlineIndex === 0 &&
+            !this.noCompressText.includes(ruby.text)
+          ) {
             // 首行压缩到一行
             rubyLeaf.scaleX = this.firstLineTextScale;
             ruby.width = ruby.originalWidth * this.firstLineTextScale;
-          } else if (!this.noCompressText.includes(ruby.text) && lastNewline) {
+          } else if (
+            !this.noCompressText.includes(ruby.text) &&
+            lastNewline &&
+            !this.firstLineCompress
+          ) {
             // 只压缩最后一行
             rubyLeaf.scaleX = this.textScale;
             ruby.width = ruby.originalWidth * this.textScale;
@@ -493,7 +501,10 @@ export class CompressText extends Group {
         const hasBreak = itemList.some((item) => item.ruby.text === '\n');
         const isOverWidth =
           this.width && this.currentX && this.currentX + itemWidth > this.width;
-        if (hasBreak || isOverWidth) {
+        if (
+          hasBreak ||
+          (isOverWidth && !(this.firstLineCompress || this.compressAllLines))
+        ) {
           this.addLine();
         }
         itemList.forEach((item) => {

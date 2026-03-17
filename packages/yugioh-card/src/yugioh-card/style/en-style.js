@@ -34,14 +34,19 @@ export default inheritProp({
   description: {
     fontSize: 42,
     lineHeight: 1.02,
-    smallFontSize: 36,
   },
   edition: {
     fontFamily: 'palatinolinotypebold',
     fontSize: 46,
     smallFontSize: 32,
     fontWeight: 'bold',
-    top: 1927,
+    top: 1930,
     left: 265,
+  },
+  copyright: {
+    fontFamily: 'stoneserifregular',
+    fontSize: 36,
+    specFontFamily: 'ygomatrixbook',
+    specFontSize: 45,
   },
 });
