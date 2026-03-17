@@ -28,7 +28,8 @@ export class YugiohCard extends Card {
   descriptionLeaf = null;
   atkDefLinkLeaf = null;
   passwordLeaf = null;
-  copyrightLeaf = null;
+  copyrightTextLeaf = null;
+  copyrightImgLeaf = null;
   editionLeafs = null;
   laserLeaf = null;
   rareLeaf = null;
@@ -577,8 +578,7 @@ export class YugiohCard extends Card {
       rtFontSize: description.rtFontSize,
       rtStrokeWidth: this.data.descriptionWeight,
       rtTop: description.rtTop,
-      autoSmallSize: !!description.smallFontSize,
-      smallFontSize: description.smallFontSize,
+      autoSmallSize: true,
       width: 1175,
       height,
       x: 109,
@@ -748,9 +748,9 @@ export class YugiohCard extends Card {
 
     this.passwordLeaf.set({
       text: this.data.password,
-      fontFamily: 'stoneserifregular',
+      fontFamily: 'palatinolinotype',
       fontWeight: 500,
-      fontSize: 40,
+      fontSize: 45,
       letterSpacing: 1,
       color:
         this.data.type === 'monster' && this.data.cardType === 'xyz'
@@ -758,56 +758,75 @@ export class YugiohCard extends Card {
           : 'black',
       //x: 66,
       x: 63,
-      y: 1932,
+      y: 1930,
       zIndex: 30,
     });
   }
 
   drawCopyright() {
-    if (!this.copyrightLeaf) {
-      //refactor into a group because we don't have a good image
-      //for 2020 copyright
-      this.copyrightLeaf = new Group();
-      const copyrightImg = new Image();
-      const copyrightText = new Text();
-      this.copyrightLeaf.add([copyrightImg, copyrightText]);
-      this.leafer.add(this.copyrightLeaf);
+    if (!this.copyrightImgLeaf) {
+      //removing group in favor of separate leafs
+      //for other copyrights
+      this.copyrightImgLeaf = new Image();
+      this.leafer.add(this.copyrightImgLeaf);
     }
-
+    if (!this.copyrightTextLeaf) {
+      //removing group in favor of separate leafs
+      //for 2020 copyright
+      this.copyrightTextLeaf = new CompressText();
+      this.leafer.add(this.copyrightTextLeaf);
+    }
+    if (!this.copyrightIcoLeaf) {
+      this.copyrightIcoLeaf = new Text();
+      this.leafer.add(this.copyrightIcoLeaf);
+    }
+    const { copyright } = this.style;
     const color =
       this.data.type === 'monster' && this.data.cardType === 'xyz'
         ? 'white'
         : 'black';
-    const [copyrightImg, copyrightText] = this.copyrightLeaf.children;
-    if (this.data.copyright !== 'en2') {
-      //handle old copyright the same as before
-      const copyrightUrl = this.data.copyright
-        ? `${this.baseImage}/copyright-${this.data.copyright}-${color}.svg`
-        : '';
-      copyrightImg.set({
-        url: copyrightUrl,
-        x: this.cardWidth - 141,
-        y: 1936,
-        //around: { type: 'percent', x: 1, y: 0 },
-        visible: this.showCopyright,
-        zIndex: 30,
-      });
-    } else if (this.data.copyright === 'en2') {
-      //special case for en2
-      copyrightText.set({
-        text: '©2020 Studio Dice/SHUEISHA, TV TOKYO, KONAMI',
-        fontFamily: 'ygoitcstoneserifltitalic',
-        fontSize: 30,
-        x: this.cardWidth - 141,
-        y: 1936,
-        around: { type: 'percent', x: 1, y: 0 },
-        visible: this.showCopyright,
-        zIndex: 30,
-      });
-    }
-    console.log('img:', copyrightImg, 'text:', copyrightText);
-    this.copyrightLeaf.set({
-      visible: this.showCopyright,
+    const showImgCopyright = this?.data?.copyright !== 'en2';
+    //handle old copyright the same as before
+    const copyrightUrl = this.data.copyright
+      ? `${this.baseImage}/copyright-${this.data.copyright}-${color}.svg`
+      : '';
+    this.copyrightImgLeaf.set({
+      url: copyrightUrl,
+      x: this.cardWidth - 141,
+      y: 1936,
+      around: { type: 'percent', x: 1, y: 0 },
+      visible: this.showCopyright && showImgCopyright,
+      zIndex: 30,
+    });
+    //special case for en2
+    this.copyrightTextLeaf.set({
+      text:
+        (this.data.copyright === 'en2'
+          ? '2020 Studio Dice/SHUEISHA, TV TOKYO, KONAMI\n'
+          : this.data.copyright) || '',
+      color,
+      fontFamily: copyright.fontFamily,
+      fontSize: copyright.fontSize,
+      fontWeight: 500,
+      x: this.cardWidth - 135,
+      y: 1940,
+      around: { type: 'percent', x: 1, y: 0 },
+      width: 610,
+      firstLineCompress: true,
+      autoSmallSize: true,
+      visible: this.showCopyright && !showImgCopyright,
+      zIndex: 30,
+    });
+    this.copyrightIcoLeaf.set({
+      text: '© ',
+      letterSpacing: 2,
+      color,
+      fontFamily: copyright.specFontFamily,
+      fontSize: copyright.specFontSize,
+      x: this.cardWidth - 135 - this.copyrightTextLeaf.width,
+      y: 1940 - this.copyrightTextLeaf.height / 7, //magic number
+      around: { type: 'percent', x: 1, y: 0 },
+      visible: this.showCopyright && !showImgCopyright,
       zIndex: 30,
     });
   }
